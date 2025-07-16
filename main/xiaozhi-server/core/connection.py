@@ -169,14 +169,13 @@ class ConnectionHandler:
             else:
                 self.client_ip = ws.remote_address[0]
 
-            # If you still need a dict of *all* headers, construct it carefully
-            for header_name, header_values in ws.request.headers.raw_items():
-                decoded_name = header_name.decode('utf-8').lower()
-                decoded_values = [v.decode('utf-8') for v in header_values]
-                if len(decoded_values) > 1:
-                    self.headers[decoded_name] = decoded_values
+            for name, value in ws.request.headers.items():
+                # Use get_all() to retrieve all values for a header
+                all_values_for_header = ws.request.headers.get_all(name)
+                if len(all_values_for_header) > 1:
+                    self.headers[name.lower()] = all_values_for_header
                 else:
-                    self.headers[decoded_name] = decoded_values[0]
+                    self.headers[name.lower()] = all_values_for_header[0]
 
             if self.headers.get("device-id", None) is None:
                 # 尝试从 URL 的查询参数中获取 device-id
