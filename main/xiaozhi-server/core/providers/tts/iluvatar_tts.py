@@ -15,7 +15,7 @@ logger = setup_logging()
 class TTSProvider(TTSProviderBase):
     def __init__(self, config, delete_audio_file):
         super().__init__(config, delete_audio_file)
-        self.url = config.get("url", "https://ai-cloud.4paradigm.com:9443/tts/")
+        self.url = config.get("url", "https://ai-cloud.4paradigm.com:9443/ttsgate/cognitiveservices")
         self.format = config.get("format", "wav")
         self.audio_file_type = config.get("format", "wav")
         self.output_file = config.get("output_dir", "tmp/")
@@ -27,6 +27,11 @@ class TTSProvider(TTSProviderBase):
             'Content-Type': 'application/ssml+xml'
         }
         self.lang = config.get("lang", "zh")
+        if config.get("private_voice"):
+            self.voice = config.get("private_voice")
+        else:
+            self.voice = config.get("voice")
+        self.first = True
         self.auth = HTTPBasicAuth(self.username, self.password)
         logger.bind(tag=TAG).info("iluvatar tts inited")
 
@@ -64,15 +69,20 @@ class TTSProvider(TTSProviderBase):
         xml_body.set('lang', self.lang)
         voice = ElementTree.SubElement(xml_body, 'voice')
         voice.set('lang', self.lang)
-        # voice.set('name', voice_name)
+        voice.set('name', self.voice)
         voice.text = text
+        if self.first:
+            params = {'fast_infer': 1}
+            self.first = False
+        else:
+            params = {}
 
         body = ElementTree.tostring(xml_body, encoding="utf-8")
 
         if self.method.upper() == "POST":
-            resp = requests.post(self.url, data=body, headers=self.headers, auth=self.auth)
+            resp = requests.post(self.url, params=params, data=body, headers=self.headers, auth=self.auth)
         else:
-            resp = requests.get(self.url, data=body, headers=self.headers, auth=self.auth)
+            resp = requests.get(self.url, params=params, data=body, headers=self.headers, auth=self.auth)
         if resp.status_code == 200:
             pcm_data = resp.content
             wav_header = self._construct_wav_header(pcm_data)
