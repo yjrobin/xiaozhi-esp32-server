@@ -4,6 +4,7 @@ import queue
 import uuid
 import asyncio
 import threading
+import time
 from core.utils import p3
 from datetime import datetime
 from core.utils import textUtils
@@ -79,6 +80,7 @@ class TTSProviderBase(ABC):
     def to_tts(self, text):
         text = MarkdownCleaner.clean_markdown(text)
         max_repeat_time = 5
+        start_time = time.monotonic()
         if self.delete_audio_file:
             # 需要删除文件的直接转为音频数据
             while max_repeat_time > 0:
@@ -88,6 +90,8 @@ class TTSProviderBase(ABC):
                         audio_datas, _ = audio_bytes_to_data(
                             audio_bytes, file_type=self.audio_file_type, is_opus=True
                         )
+                        end_time = time.monotonic()
+                        logger.bind(tag=TAG).info(f"TTS耗时: {end_time - start_time:.3f}s")
                         return audio_datas
                     else:
                         max_repeat_time -= 1
