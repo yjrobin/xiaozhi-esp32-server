@@ -66,9 +66,9 @@ class TTSProvider(TTSProviderBase):
     async def text_to_speak(self, text, output_file):
         # Construct the SSML payload
         xml_body = ElementTree.Element('speak', version='1.0')
-        xml_body.set('lang', self.lang)
+        xml_body.set('{http://www.w3.org/XML/1998/namespace}lang', self.lang)
         voice = ElementTree.SubElement(xml_body, 'voice')
-        voice.set('lang', self.lang)
+        voice.set('{http://www.w3.org/XML/1998/namespace}lang', self.lang)
         voice.set('name', self.voice)
         voice.text = text
         if self.first:
