@@ -162,8 +162,8 @@ class ConnectionHandler:
             # self.headers = dict(ws.request.headers)
 
             self.headers = {} # Initialize as an empty dict or None
-            # Access specific headers as needed, using getall for multi-value
-            self.x_forwarded_for = ws.request.headers.getall('x-forwarded-for')
+            # Access specific headers as needed, using get_all for multi-value
+            self.x_forwarded_for = ws.request.headers.get_all('x-forwarded-for')
             if self.x_forwarded_for:
                 self.client_ip = self.x_forwarded_for[0]
             else:
