@@ -169,7 +169,7 @@ class ConnectionHandler:
             else:
                 self.client_ip = ws.remote_address[0]
 
-            for name, value in ws.request.headers.items():
+            for name, value in ws.request.headers.raw_items():
                 # Use get_all() to retrieve all values for a header
                 all_values_for_header = ws.request.headers.get_all(name)
                 if len(all_values_for_header) > 1:
