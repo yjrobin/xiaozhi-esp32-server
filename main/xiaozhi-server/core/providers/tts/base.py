@@ -86,7 +86,7 @@ class TTSProviderBase(ABC):
             while max_repeat_time > 0:
                 try:
                     audio_bytes = asyncio.run(
-                        self.text_to_speak(text, None, self.is_first_sentence)
+                        self.text_to_speak(text, None, is_first_sentence=self.is_first_sentence)
                     )
                     if audio_bytes:
                         audio_datas, _ = audio_bytes_to_data(
@@ -116,7 +116,7 @@ class TTSProviderBase(ABC):
             try:
                 while not os.path.exists(tmp_file) and max_repeat_time > 0:
                     try:
-                        asyncio.run(self.text_to_speak(text, tmp_file, self.is_first_sentence))
+                        asyncio.run(self.text_to_speak(text, tmp_file, is_first_sentence=self.is_first_sentence))
                     except Exception as e:
                         logger.bind(tag=TAG).warning(
                             f"语音生成失败{5 - max_repeat_time + 1}次: {text}，错误: {e}"
@@ -141,7 +141,7 @@ class TTSProviderBase(ABC):
                 return None
 
     @abstractmethod
-    async def text_to_speak(self, text, output_file, is_first_sentence=False):
+    async def text_to_speak(self, text, output_file, **kwargs):
         pass
 
     def audio_to_pcm_data(self, audio_file_path):
