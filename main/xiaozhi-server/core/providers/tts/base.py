@@ -85,7 +85,9 @@ class TTSProviderBase(ABC):
             # 需要删除文件的直接转为音频数据
             while max_repeat_time > 0:
                 try:
-                    audio_bytes = asyncio.run(self.text_to_speak(text, None))
+                    audio_bytes = asyncio.run(
+                        self.text_to_speak(text, None, self.is_first_sentence)
+                    )
                     if audio_bytes:
                         audio_datas, _ = audio_bytes_to_data(
                             audio_bytes, file_type=self.audio_file_type, is_opus=True
@@ -114,7 +116,7 @@ class TTSProviderBase(ABC):
             try:
                 while not os.path.exists(tmp_file) and max_repeat_time > 0:
                     try:
-                        asyncio.run(self.text_to_speak(text, tmp_file))
+                        asyncio.run(self.text_to_speak(text, tmp_file, self.is_first_sentence))
                     except Exception as e:
                         logger.bind(tag=TAG).warning(
                             f"语音生成失败{5 - max_repeat_time + 1}次: {text}，错误: {e}"
@@ -139,7 +141,7 @@ class TTSProviderBase(ABC):
                 return None
 
     @abstractmethod
-    async def text_to_speak(self, text, output_file):
+    async def text_to_speak(self, text, output_file, is_first_sentence=False):
         pass
 
     def audio_to_pcm_data(self, audio_file_path):
@@ -210,6 +212,7 @@ class TTSProviderBase(ABC):
                     self.processed_chars = 0
                     self.tts_text_buff = []
                     self.is_first_sentence = True
+                    logger.bind(tag=TAG).info("is_first_sentence = True")
                     self.tts_audio_first_sentence = True
                 elif ContentType.TEXT == message.content_type:
                     self.tts_text_buff.append(message.content_detail)
@@ -322,6 +325,7 @@ class TTSProviderBase(ABC):
         elif self.tts_stop_request and current_text:
             segment_text = current_text
             self.is_first_sentence = True  # 重置标志
+            logger.bind(tag=TAG).info("is_first_sentence = True")
             return segment_text
         else:
             return None
