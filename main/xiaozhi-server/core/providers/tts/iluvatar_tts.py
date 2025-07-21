@@ -62,8 +62,7 @@ class TTSProvider(TTSProviderBase):
                                  num_frames * num_channels * sample_width)
         return wav_header
 
-    async def text_to_speak(self, text, output_file, **kwargs):
-        is_first_sentence = kwargs.get('is_first_sentence', False)
+    async def text_to_speak(self, text, output_file, is_first_sentence=False):
         # Construct the SSML payload
         xml_body = ElementTree.Element('speak', version='1.0')
         xml_body.set('{http://www.w3.org/XML/1998/namespace}lang', self.lang)

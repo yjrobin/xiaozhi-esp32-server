@@ -3,6 +3,7 @@ import re
 import queue
 import uuid
 import asyncio
+import inspect
 import threading
 import time
 from core.utils import p3
@@ -81,12 +82,20 @@ class TTSProviderBase(ABC):
         text = MarkdownCleaner.clean_markdown(text)
         max_repeat_time = 5
         start_time = time.monotonic()
+
+        sig = inspect.signature(self.text_to_speak)
+        params = {
+            'text': text,
+        }
+
         if self.delete_audio_file:
             # 需要删除文件的直接转为音频数据
             while max_repeat_time > 0:
                 try:
+                    if 'is_first_sentence' in sig.parameters:
+                        params['is_first_sentence'] = self.is_first_sentence
                     audio_bytes = asyncio.run(
-                        self.text_to_speak(text, None, is_first_sentence=self.is_first_sentence)
+                        self.text_to_speak(**params, output_file=None)
                     )
                     if audio_bytes:
                         audio_datas, _ = audio_bytes_to_data(
@@ -116,7 +125,9 @@ class TTSProviderBase(ABC):
             try:
                 while not os.path.exists(tmp_file) and max_repeat_time > 0:
                     try:
-                        asyncio.run(self.text_to_speak(text, tmp_file, is_first_sentence=self.is_first_sentence))
+                        if 'is_first_sentence' in sig.parameters:
+                            params['is_first_sentence'] = self.is_first_sentence
+                        asyncio.run(self.text_to_speak(**params, output_file=tmp_file))
                     except Exception as e:
                         logger.bind(tag=TAG).warning(
                             f"语音生成失败{5 - max_repeat_time + 1}次: {text}，错误: {e}"
@@ -141,7 +152,7 @@ class TTSProviderBase(ABC):
                 return None
 
     @abstractmethod
-    async def text_to_speak(self, text, output_file, **kwargs):
+    async def text_to_speak(self, text, output_file, is_first_sentence=False):
         pass
 
     def audio_to_pcm_data(self, audio_file_path):
