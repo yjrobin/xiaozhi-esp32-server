@@ -31,7 +31,6 @@ class TTSProvider(TTSProviderBase):
             self.voice = config.get("private_voice")
         else:
             self.voice = config.get("voice")
-        self.first = True
         self.auth = HTTPBasicAuth(self.username, self.password)
         logger.bind(tag=TAG).info("iluvatar tts inited")
 
@@ -63,7 +62,7 @@ class TTSProvider(TTSProviderBase):
                                  num_frames * num_channels * sample_width)
         return wav_header
 
-    async def text_to_speak(self, text, output_file):
+    async def text_to_speak(self, text, output_file, is_first_sentence=False):
         # Construct the SSML payload
         xml_body = ElementTree.Element('speak', version='1.0')
         xml_body.set('{http://www.w3.org/XML/1998/namespace}lang', self.lang)
@@ -71,11 +70,10 @@ class TTSProvider(TTSProviderBase):
         voice.set('{http://www.w3.org/XML/1998/namespace}lang', self.lang)
         voice.set('name', self.voice)
         voice.text = text
-        if self.first:
-            params = {'fast_infer': 1}
-            self.first = False
-        else:
-            params = {}
+
+        params = {}
+        if is_first_sentence:
+            params['fast_infer'] = 1
 
         body = ElementTree.tostring(xml_body, encoding="utf-8")
 
