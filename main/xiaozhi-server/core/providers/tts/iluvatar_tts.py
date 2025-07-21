@@ -74,6 +74,7 @@ class TTSProvider(TTSProviderBase):
         params = {}
         if is_first_sentence:
             params['fast_infer'] = 1
+            logger.bind(tag=TAG).info("fast_infer = 1")
 
         body = ElementTree.tostring(xml_body, encoding="utf-8")
 
