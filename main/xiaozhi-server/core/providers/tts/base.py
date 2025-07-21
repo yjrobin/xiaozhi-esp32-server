@@ -94,6 +94,7 @@ class TTSProviderBase(ABC):
                 try:
                     if 'is_first_sentence' in sig.parameters:
                         params['is_first_sentence'] = self.is_first_sentence
+                        logger.bind(tag=TAG).info(f"is_first_sentence: {self.is_first_sentence}")
                     audio_bytes = asyncio.run(
                         self.text_to_speak(**params, output_file=None)
                     )
@@ -127,6 +128,7 @@ class TTSProviderBase(ABC):
                     try:
                         if 'is_first_sentence' in sig.parameters:
                             params['is_first_sentence'] = self.is_first_sentence
+                            logger.bind(tag=TAG).info(f"is_first_sentence: {self.is_first_sentence}")
                         asyncio.run(self.text_to_speak(**params, output_file=tmp_file))
                     except Exception as e:
                         logger.bind(tag=TAG).warning(
@@ -223,7 +225,6 @@ class TTSProviderBase(ABC):
                     self.processed_chars = 0
                     self.tts_text_buff = []
                     self.is_first_sentence = True
-                    logger.bind(tag=TAG).info("is_first_sentence = True")
                     self.tts_audio_first_sentence = True
                 elif ContentType.TEXT == message.content_type:
                     self.tts_text_buff.append(message.content_detail)
@@ -242,6 +243,8 @@ class TTSProviderBase(ABC):
                                 self.tts_audio_queue.put(
                                     (message.sentence_type, audio_datas, segment_text)
                                 )
+                        if self.is_first_sentence:
+                            self.is_first_sentence = False
                 elif ContentType.FILE == message.content_type:
                     self._process_remaining_text()
                     tts_file = message.content_file
@@ -328,15 +331,9 @@ class TTSProviderBase(ABC):
             )
             self.processed_chars += len(segment_text_raw)  # 更新已处理字符位置
 
-            # 如果是第一句话，在找到第一个逗号后，将标志设置为False
-            if self.is_first_sentence:
-                self.is_first_sentence = False
-
             return segment_text
         elif self.tts_stop_request and current_text:
             segment_text = current_text
-            self.is_first_sentence = True  # 重置标志
-            logger.bind(tag=TAG).info("is_first_sentence = True")
             return segment_text
         else:
             return None
