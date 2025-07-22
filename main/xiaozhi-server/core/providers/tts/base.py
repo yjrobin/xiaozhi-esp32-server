@@ -229,6 +229,7 @@ class TTSProviderBase(ABC):
                 elif ContentType.TEXT == message.content_type:
                     self.tts_text_buff.append(message.content_detail)
                     segment_text = self._get_segment_text()
+                    if segment_text is not None: logger.bind(tag=TAG).info(f"{segment_text}")
                     if segment_text:
                         if self.delete_audio_file:
                             audio_datas = self.to_tts(segment_text)
@@ -322,8 +323,10 @@ class TTSProviderBase(ABC):
         for punct in punctuations_to_use:
             if self.is_first_sentence and 'is_first_sentence' in sig.parameters:
                 pos = current_text.find(punct)
+                logger.bind(tag=TAG).info(f"first sentence {current_text} find first punct {punct} at {pos}")
                 if (pos != -1):
                     pos = current_text.find(punct, pos + 1)
+                    logger.bind(tag=TAG).info(f"first sentence {current_text} find second punct {punct} at {pos}")
             else:
                 pos = current_text.rfind(punct)
             if (pos != -1 and last_punct_pos == -1) or (
