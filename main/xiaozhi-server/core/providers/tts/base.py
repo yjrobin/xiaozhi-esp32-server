@@ -322,11 +322,15 @@ class TTSProviderBase(ABC):
 
         for punct in punctuations_to_use:
             if self.is_first_sentence and 'is_first_sentence' in sig.parameters:
-                pos = current_text.find(punct)
-                logger.bind(tag=TAG).info(f"first sentence {current_text} find first punct {punct} at {pos}")
-                if (pos != -1):
-                    pos = current_text.find(punct, pos + 1)
-                    logger.bind(tag=TAG).info(f"first sentence {current_text} find second punct {punct} at {pos}")
+                pos = -1
+                first_pos = current_text.find(punct)
+                logger.bind(tag=TAG).info(f"first sentence {current_text} find first punct {punct} at {first_pos}")
+                if (first_pos != -1):
+                    for punct_2 in punctuations_to_use:
+                        pos = current_text.find(punct_2, first_pos + 1)
+                        if (pos != -1):
+                            logger.bind(tag=TAG).info(f"first sentence {current_text} find second punct {punct_2} at {pos}")
+                            break
             else:
                 pos = current_text.rfind(punct)
             if (pos != -1 and last_punct_pos == -1) or (
