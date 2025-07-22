@@ -320,9 +320,12 @@ class TTSProviderBase(ABC):
         )
 
         for punct in punctuations_to_use:
-            pos = current_text.rfind(punct)
             if self.is_first_sentence and 'is_first_sentence' in sig.parameters:
-                pos = current_text[pos + 1 :].rfind(punct)
+                pos = current_text.find(punct)
+                if (pos != -1):
+                    pos = current_text.find(punct, pos + 1)
+            else:
+                pos = current_text.rfind(punct)
             if (pos != -1 and last_punct_pos == -1) or (
                 pos != -1 and pos < last_punct_pos
             ):
