@@ -309,11 +309,12 @@ class TTSProviderBase(ABC):
         full_text = "".join(self.tts_text_buff)
         current_text = full_text[self.processed_chars :]  # 从未处理的位置开始
         last_punct_pos = -1
+        sig = inspect.signature(self.text_to_speak)
 
         # 根据是否是第一句话选择不同的标点符号集合
         punctuations_to_use = (
             self.first_sentence_punctuations
-            if self.is_first_sentence
+            if self.is_first_sentence and 'is_first_sentence' not in sig.parameters:
             else self.punctuations
         )
 
