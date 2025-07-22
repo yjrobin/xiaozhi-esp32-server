@@ -314,12 +314,15 @@ class TTSProviderBase(ABC):
         # 根据是否是第一句话选择不同的标点符号集合
         punctuations_to_use = (
             self.first_sentence_punctuations
-            if self.is_first_sentence and 'is_first_sentence' not in sig.parameters
+            if self.is_first_sentence
+            # if self.is_first_sentence and 'is_first_sentence' not in sig.parameters
             else self.punctuations
         )
 
         for punct in punctuations_to_use:
             pos = current_text.rfind(punct)
+            if self.is_first_sentence and 'is_first_sentence' in sig.parameters:
+                pos = current_text[pos + 1 :].rfind(punct)
             if (pos != -1 and last_punct_pos == -1) or (
                 pos != -1 and pos < last_punct_pos
             ):
