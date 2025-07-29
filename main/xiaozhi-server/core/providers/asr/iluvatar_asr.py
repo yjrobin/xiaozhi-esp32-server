@@ -58,7 +58,7 @@ class ASRProvider(ASRProviderBase):
                 self.url,
                 params={
                     'language': self.lang
-                }
+                },
                 auth=self.auth,
                 headers={
                             'Content-Type': 'audio/wav'
