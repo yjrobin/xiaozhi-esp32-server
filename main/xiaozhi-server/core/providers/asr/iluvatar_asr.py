@@ -27,6 +27,7 @@ class ASRProvider(ASRProviderBase):
         self.delete_audio_file = delete_audio_file
         self.auth = HTTPBasicAuth(self.username, self.password)
         self.url = config.get("url")
+        self.lang = config.get("lang","zh")
         # 确保输出目录存在
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -55,6 +56,9 @@ class ASRProvider(ASRProviderBase):
             start_time = time.time()
             response = requests.post(
                 self.url,
+                params={
+                    'language': self.lang
+                }
                 auth=self.auth,
                 headers={
                             'Content-Type': 'audio/wav'
