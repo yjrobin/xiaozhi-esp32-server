@@ -424,7 +424,7 @@ class TTSProvider(TTSProviderBase):
                         and res.header.message_type == AUDIO_ONLY_RESPONSE
                     ):
                         logger.bind(tag=TAG).debug(f"推送数据到队列里面～～")
-                        opus_datas = self.wav_to_opus_data_audio_raw(res.payload)
+                        opus_datas = self.wav_to_audio_data_raw(res.payload)
                         logger.bind(tag=TAG).debug(
                             f"推送数据到队列里面帧数～～{len(opus_datas)}"
                         )
@@ -614,20 +614,25 @@ class TTSProvider(TTSProviderBase):
             )
         )
 
-    def wav_to_opus_data_audio_raw(self, raw_data_var, is_end=False):
-        opus_datas = self.opus_encoder.encode_pcm_to_opus(raw_data_var, is_end)
-        return opus_datas
+    def wav_to_audio_data_raw(self, raw_data_var, is_end=False):
+        if self.conn.audio_format == "opus":
+            audio_datas = self.opus_encoder.encode_pcm_to_opus(raw_data_var, is_end)
+        else:
+            audio_datas = [raw_data_var]
+        return audio_datas
 
-    def to_tts(self, text: str) -> list:
+    def to_tts(self, conn, text: str) -> list:
         """非流式生成音频数据，用于生成音频及测试场景
 
         Args:
+            conn: 连接对象
             text: 要转换的文本
 
         Returns:
             list: 音频数据列表
         """
         try:
+            self.conn = conn
             # 创建事件循环
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -700,8 +705,8 @@ class TTSProvider(TTSProviderBase):
                             res.optional.event == EVENT_TTSResponse
                             and res.header.message_type == AUDIO_ONLY_RESPONSE
                         ):
-                            opus_datas = self.wav_to_opus_data_audio_raw(res.payload)
-                            audio_data.extend(opus_datas)
+                            audio_datas = self.wav_to_audio_data_raw(res.payload)
+                            audio_data.extend(audio_datas)
                         elif res.optional.event == EVENT_SessionFinished:
                             break
 

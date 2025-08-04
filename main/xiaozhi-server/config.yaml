@@ -79,7 +79,7 @@ xiaozhi:
   version: 1
   transport: websocket
   audio_params:
-    format: opus
+    format: opus  # 可选 opus 或 pcm
     sample_rate: 16000
     channels: 1
     frame_duration: 60

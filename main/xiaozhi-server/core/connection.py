@@ -80,7 +80,7 @@ class ConnectionHandler:
         self.welcome_msg = None
         self.max_output_size = 0
         self.chat_history_conf = 0
-        self.audio_format = "opus"
+        self.audio_format = self.config.get("xiaozhi", {}).get("audio_params", {}).get("format", "opus")
 
         # 客户端状态相关
         self.client_abort = False
@@ -207,6 +207,9 @@ class ConnectionHandler:
             # 认证通过,继续处理
             self.websocket = ws
             self.device_id = self.headers.get("device-id", None)
+
+            # 从header中获取客户端想要的音频格式，默认为config.yaml中的配置
+            self.audio_format = self.headers.get("audio-format", self.audio_format)
 
             # 初始化活动时间戳
             self.last_activity_time = time.time() * 1000

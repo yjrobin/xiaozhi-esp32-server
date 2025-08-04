@@ -828,7 +828,7 @@ def pcm_to_data(raw_data, is_opus=True):
             # 编码Opus数据
             frame_data = encoder.encode(np_frame.tobytes(), frame_size)
         else:
-            frame_data = chunk if isinstance(chunk, bytes) else bytes(chunk)
+            frame_data = chunk
 
         datas.append(frame_data)
 

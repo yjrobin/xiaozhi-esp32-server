@@ -84,18 +84,20 @@ class ASRProviderBase(ABC):
         try:
             total_start_time = time.monotonic()
             
-            # 准备音频数据
-            if conn.audio_format == "pcm":
-                pcm_data = asr_audio_task
-            else:
-                pcm_data = self.decode_opus(asr_audio_task)
+            # Prepare audio data for voiceprint (if enabled)
+            pcm_data_for_voiceprint = []
+            if self.voiceprint_provider:
+                if conn.audio_format == "pcm":
+                    pcm_data_for_voiceprint = asr_audio_task
+                else:
+                    pcm_data_for_voiceprint = self.decode_opus(asr_audio_task)
             
-            combined_pcm_data = b"".join(pcm_data)
+            combined_pcm_data_for_voiceprint = b"".join(pcm_data_for_voiceprint)
             
-            # 预先准备WAV数据
+            # Pre-prepare WAV data for voiceprint
             wav_data = None
-            if self.voiceprint_provider and combined_pcm_data:
-                wav_data = self._pcm_to_wav(combined_pcm_data)
+            if self.voiceprint_provider and combined_pcm_data_for_voiceprint:
+                wav_data = self._pcm_to_wav(combined_pcm_data_for_voiceprint)
             
             
             # 定义ASR任务

@@ -122,7 +122,7 @@ async def wakeupWordsResponse(conn):
             return
 
         # 生成TTS音频
-        tts_result = await asyncio.to_thread(conn.tts.to_tts, result)
+        tts_result = await asyncio.to_thread(conn.tts.to_tts, conn, result)
         if not tts_result:
             return
 

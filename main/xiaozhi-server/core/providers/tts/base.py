@@ -78,7 +78,16 @@ class TTSProviderBase(ABC):
             f"tts-{datetime.now().date()}@{uuid.uuid4().hex}{extension}",
         )
 
-    def to_tts(self, text):
+    def to_tts(self, conn, text: str) -> list:
+        """非流式生成音频数据，用于生成音频及测试场景
+
+        Args:
+            text: 要转换的文本
+
+        Returns:
+            list: 音频数据列表
+        """
+        pass
         text = MarkdownCleaner.clean_markdown(text)
         max_repeat_time = 5
         start_time = time.monotonic()
@@ -100,7 +109,7 @@ class TTSProviderBase(ABC):
                     )
                     if audio_bytes:
                         audio_datas, _ = audio_bytes_to_data(
-                            audio_bytes, file_type=self.audio_file_type, is_opus=True
+                            audio_bytes, file_type=self.audio_file_type, is_opus=conn.audio_format == "opus"
                         )
                         end_time = time.monotonic()
                         logger.bind(tag=TAG).info(f"TTS耗时: {end_time - start_time:.3f}s")
@@ -159,11 +168,13 @@ class TTSProviderBase(ABC):
 
     def audio_to_pcm_data(self, audio_file_path):
         """音频文件转换为PCM编码"""
-        return audio_to_data(audio_file_path, is_opus=False)
+        is_opus = conn.audio_format == "opus"
+        return audio_to_data(audio_file_path, is_opus=is_opus)
 
-    def audio_to_opus_data(self, audio_file_path):
-        """音频文件转换为Opus编码"""
-        return audio_to_data(audio_file_path, is_opus=True)
+    def audio_to_data(self, conn, audio_file_path):
+        """音频文件转换为Opus或PCM编码"""
+        is_opus = conn.audio_format == "opus"
+        return audio_to_data(audio_file_path, is_opus=is_opus)
 
     def tts_one_sentence(
         self,
@@ -232,13 +243,13 @@ class TTSProviderBase(ABC):
                     # if segment_text is not None: logger.bind(tag=TAG).info(f"{segment_text}")
                     if segment_text:
                         if self.delete_audio_file:
-                            audio_datas = self.to_tts(segment_text)
+                            audio_datas = self.to_tts(self.conn, segment_text)
                             if audio_datas:
                                 self.tts_audio_queue.put(
                                     (message.sentence_type, audio_datas, segment_text)
                                 )
                         else:
-                            tts_file = self.to_tts(segment_text)
+                            tts_file = self.to_tts(self.conn, segment_text)
                             if tts_file:
                                 audio_datas = self._process_audio_file(tts_file)
                                 self.tts_audio_queue.put(
@@ -368,7 +379,7 @@ class TTSProviderBase(ABC):
         elif self.conn.audio_format == "pcm":
             audio_datas, _ = self.audio_to_pcm_data(tts_file)
         else:
-            audio_datas, _ = self.audio_to_opus_data(tts_file)
+            audio_datas, _ = self.audio_to_data(conn, tts_file)
 
         if (
             self.delete_audio_file
@@ -397,13 +408,13 @@ class TTSProviderBase(ABC):
             segment_text = textUtils.get_string_no_punctuation_or_emoji(remaining_text)
             if segment_text:
                 if self.delete_audio_file:
-                    audio_datas = self.to_tts(segment_text)
+                    audio_datas = self.to_tts(self.conn, segment_text)
                     if audio_datas:
                         self.tts_audio_queue.put(
                             (SentenceType.MIDDLE, audio_datas, segment_text)
                         )
                 else:
-                    tts_file = self.to_tts(segment_text)
+                    tts_file = self.to_tts(self.conn, segment_text)
                     audio_datas = self._process_audio_file(tts_file)
                     self.tts_audio_queue.put(
                         (SentenceType.MIDDLE, audio_datas, segment_text)
