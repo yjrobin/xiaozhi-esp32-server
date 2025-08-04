@@ -36,9 +36,12 @@ class VADProvider(VADProviderBase):
         # 至少要多少帧才算有语音
         self.frame_window_threshold = 3
 
-    def is_vad(self, conn, opus_packet):
+    def is_vad(self, conn, audio_packet):
         try:
-            pcm_frame = self.decoder.decode(opus_packet, 960)
+            if conn.audio_format == "opus":
+                pcm_frame = self.decoder.decode(audio_packet, 960)
+            else:
+                pcm_frame = audio_packet
             conn.client_audio_buffer.extend(pcm_frame)  # 将新数据加入缓冲区
 
             # 处理缓冲区中的完整帧（每次处理512采样点）
