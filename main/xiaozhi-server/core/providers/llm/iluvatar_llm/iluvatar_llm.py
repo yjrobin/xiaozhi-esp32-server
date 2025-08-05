@@ -95,7 +95,8 @@ class LLMProvider(LLMProviderBase):
                     if is_active:
                         if is_first_token:
                             logger.bind(tag=TAG).info(f"llm first token cost: {perf_counter() - start_time:.3f} seconds.")
-                            is_first_token = False
+                            is_first_token =
+                        logger.bind(tag=TAG).info(f"llm token and timestamp: {perf_counter() - start_time:.3f} {content}")
                         yield content
 
         except Exception as e:
