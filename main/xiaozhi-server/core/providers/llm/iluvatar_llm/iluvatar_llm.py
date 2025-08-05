@@ -70,8 +70,9 @@ class LLMProvider(LLMProviderBase):
                     "frequency_penalty", self.frequency_penalty
                 ),
             )
-            logger.bind(tag=TAG).info(f"llm infer cost: {perf_counter() - start_time:.3f} seconds.")
+            logger.bind(tag=TAG).info(f"llm req create cost: {perf_counter() - start_time:.3f} seconds.")
             is_active = True
+            is_first_token = True
             for chunk in responses:
                 try:
                     # 检查是否存在有效的choice且content不为空
@@ -92,6 +93,9 @@ class LLMProvider(LLMProviderBase):
                         is_active = True
                         content = content.split("</think>")[-1]
                     if is_active:
+                        if is_first_token:
+                            logger.bind(tag=TAG).info(f"llm first token cost: {perf_counter() - start_time:.3f} seconds.")
+                            is_first_token = False
                         yield content
 
         except Exception as e:
