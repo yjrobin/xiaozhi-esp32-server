@@ -12,22 +12,31 @@ TAG = __name__
 
 
 async def handleAudioMessage(conn, audio):
+    hex_string = audio.hex()
+    spaced_hex_string = " ".join(hex_string[i:i+2] for i in range(0, len(hex_string), 2))
+    conn.logger.bind(tag=TAG).info(f"handleAudioMessage: len(audio)={len(audio)}: {spaced_hex_string.upper()}")
     # 当前片段是否有人说话
     have_voice = conn.vad.is_vad(conn, audio)
+    conn.logger.bind(tag=TAG).info(f"handleAudioMessage: have_voice = {have_voice}")
     # 如果设备刚刚被唤醒，短暂忽略VAD检测
     if have_voice and hasattr(conn, "just_woken_up") and conn.just_woken_up:
+        conn.logger.bind(tag=TAG).info(f"handleAudioMessage: have_voice = {have_voice}, conn.just_woken_up = {conn.just_woken_up}")
         have_voice = False
         # 设置一个短暂延迟后恢复VAD检测
         conn.asr_audio.clear()
         if not hasattr(conn, "vad_resume_task") or conn.vad_resume_task.done():
+            conn.logger.bind(tag=TAG).info(f"handleAudioMessage: create vad_resume_task")
             conn.vad_resume_task = asyncio.create_task(resume_vad_detection(conn))
         return
 
     if have_voice:
         if conn.client_is_speaking:
+            conn.logger.bind(tag=TAG).info(f"handleAudioMessage: client_is_speaking = {conn.client_is_speaking}")
             await handleAbortMessage(conn)
     # 设备长时间空闲检测，用于say goodbye
+    conn.logger.bind(tag=TAG).info(f"handleAudioMessage: await no_voice_close_connect")
     await no_voice_close_connect(conn, have_voice)
+    conn.logger.bind(tag=TAG).info(f"handleAudioMessage: await conn.asr.receive_audio")
     # 接收音频
     await conn.asr.receive_audio(conn, audio, have_voice)
 
@@ -42,7 +51,7 @@ async def startToChat(conn, text):
     # 检查输入是否是JSON格式（包含说话人信息）
     speaker_name = None
     actual_text = text
-    
+
     try:
         # 尝试解析JSON格式的输入
         if text.strip().startswith('{') and text.strip().endswith('}'):
@@ -51,13 +60,13 @@ async def startToChat(conn, text):
                 speaker_name = data['speaker']
                 actual_text = data['content']
                 conn.logger.bind(tag=TAG).info(f"解析到说话人信息: {speaker_name}")
-                
+
                 # 直接使用JSON格式的文本，不解析
                 actual_text = text
     except (json.JSONDecodeError, KeyError):
         # 如果解析失败，继续使用原始文本
         pass
-    
+
     # 保存说话人信息到连接对象
     if speaker_name:
         conn.current_speaker = speaker_name
