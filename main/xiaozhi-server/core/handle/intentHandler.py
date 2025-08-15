@@ -85,6 +85,12 @@ async def process_intent_result(conn, intent_result, original_text):
                 function_args = intent_data["function_call"]["arguments"]
                 if function_args is None:
                     function_args = {}
+            
+            if function_name == "ask_user_for_info":
+                question = function_args.get("question", "我需要更多信息才能继续。")
+                speak_txt(conn, question)
+                return True
+
             # 确保参数是字符串格式的JSON
             if isinstance(function_args, dict):
                 function_args = json.dumps(function_args)
