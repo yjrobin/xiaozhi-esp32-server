@@ -482,15 +482,18 @@ class ConnectionHandler:
             False,
         )
 
-        init_vad = check_vad_update(self.common_config, private_config)
-        init_asr = check_asr_update(self.common_config, private_config)
+        # init_vad = check_vad_update(self.common_config, private_config)
+        # init_asr = check_asr_update(self.common_config, private_config)
+        init_vad, init_asr = (False, False)
 
-        if init_vad:
+        if private_config.get("VAD", None) is not None:
+            init_vad = True
             self.config["VAD"] = private_config["VAD"]
             self.config["selected_module"]["VAD"] = private_config["selected_module"][
                 "VAD"
             ]
-        if init_asr:
+        if private_config.get("ASR", None) is not None:
+            init_asr = True
             self.config["ASR"] = private_config["ASR"]
             self.config["selected_module"]["ASR"] = private_config["selected_module"][
                 "ASR"
