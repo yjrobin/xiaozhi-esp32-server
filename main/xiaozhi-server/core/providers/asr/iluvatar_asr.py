@@ -69,8 +69,8 @@ class ASRProvider(ASRProviderBase):
             json_result = response.json()
             assert json_result["RecognitionStatus"] == "Success"
             result = json_result["DisplayText"]
-            logger.bind(tag=TAG).debug(
-                f"天数识别耗时: {time.time() - start_time:.3f}s | 结果: {result}"
+            logger.bind(tag=TAG).info(
+                f"天数识别 url:{self.url} 耗时:  {time.time() - start_time:.3f}s | 结果: {result}"
             )
 
             return result, file_path
