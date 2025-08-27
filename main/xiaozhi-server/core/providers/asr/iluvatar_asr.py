@@ -50,7 +50,7 @@ class ASRProvider(ASRProviderBase):
 
             # 判断是否保存为WAV文件
             if self.delete_audio_file:
-                pass
+                wav_data = self._pcm_to_wav(combined_pcm_data)
             else:
                 self.save_audio_to_file(pcm_data, session_id)
             start_time = time.time()
@@ -63,7 +63,7 @@ class ASRProvider(ASRProviderBase):
                 headers={
                             'Content-Type': 'audio/wav'
                         },
-                data=combined_pcm_data
+                data=wav_data
             )
             response.raise_for_status()
             json_result = response.json()
