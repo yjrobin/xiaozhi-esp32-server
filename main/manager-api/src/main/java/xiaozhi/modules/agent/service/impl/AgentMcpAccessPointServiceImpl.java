@@ -18,7 +18,7 @@ import xiaozhi.common.constant.Constant;
 import xiaozhi.common.utils.AESUtils;
 import xiaozhi.common.utils.HashEncryptionUtil;
 import xiaozhi.common.utils.JsonUtils;
-import xiaozhi.modules.agent.dto.McpJsonRpcRequest;
+import xiaozhi.modules.agent.Enums.XiaoZhiMcpJsonRpcJson;
 import xiaozhi.modules.agent.service.AgentMcpAccessPointService;
 import xiaozhi.modules.sys.service.SysParamsService;
 import xiaozhi.modules.sys.utils.WebSocketClientManager;
@@ -65,22 +65,13 @@ public class AgentMcpAccessPointServiceImpl implements AgentMcpAccessPointServic
             try (WebSocketClientManager client = WebSocketClientManager.build(
                     new WebSocketClientManager.Builder()
                             .uri(wsUrl)
+                            .bufferSize(1024 * 1024)
                             .connectTimeout(8, TimeUnit.SECONDS)
                             .maxSessionDuration(10, TimeUnit.SECONDS))) {
 
                 // 步骤1: 发送初始化消息并等待响应
                 log.info("发送MCP初始化消息，智能体ID: {}", id);
-                McpJsonRpcRequest initializeRequest = new McpJsonRpcRequest("initialize",
-                        Map.of(
-                                "protocolVersion", "2024-11-05",
-                                "capabilities", Map.of(
-                                        "roots", Map.of("listChanged", false),
-                                        "sampling", Map.of()),
-                                "clientInfo", Map.of(
-                                        "name", "xz-mcp-broker",
-                                        "version", "0.0.1")),
-                        1);
-                client.sendJson(initializeRequest);
+                client.sendText(XiaoZhiMcpJsonRpcJson.getInitializeJson());
 
                 // 等待初始化响应 (id=1) - 移除固定延迟，改为响应驱动
                 List<String> initResponses = client.listenerWithoutClose(response -> {
@@ -124,13 +115,10 @@ public class AgentMcpAccessPointServiceImpl implements AgentMcpAccessPointServic
 
                 // 步骤2: 发送初始化完成通知 - 只有在收到initialize响应后才发送
                 log.info("发送MCP初始化完成通知，智能体ID: {}", id);
-                String notificationJson = "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}";
-                client.sendText(notificationJson);
-
+                client.sendText(XiaoZhiMcpJsonRpcJson.getNotificationsInitializedJson());
                 // 步骤3: 发送工具列表请求 - 立即发送，无需额外延迟
                 log.info("发送MCP工具列表请求，智能体ID: {}", id);
-                McpJsonRpcRequest toolsRequest = new McpJsonRpcRequest("tools/list", null, 2);
-                client.sendJson(toolsRequest);
+                client.sendText(XiaoZhiMcpJsonRpcJson.getToolsListJson());
 
                 // 等待工具列表响应 (id=2)
                 List<String> toolsResponses = client.listener(response -> {
@@ -178,7 +166,7 @@ public class AgentMcpAccessPointServiceImpl implements AgentMcpAccessPointServic
 
             }
         } catch (Exception e) {
-            log.error("获取智能体 MCP 工具列表失败，智能体ID: {}", id, e);
+            log.error("获取智能体 MCP 工具列表失败，智能体ID: {},错误原因：{}", id, e.getMessage());
             return List.of();
         }
     }
