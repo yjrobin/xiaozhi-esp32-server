@@ -79,7 +79,7 @@ class ASRProviderBase(ABC):
 
             # Prepare audio data for voiceprint (if enabled)
             pcm_data_for_voiceprint = []
-            if self.voiceprint_provider:
+            if conn.voiceprint_provider:
                 if conn.audio_format == "pcm":
                     pcm_data_for_voiceprint = asr_audio_task
                 else:
