@@ -207,6 +207,7 @@ class ConnectionHandler:
             # 认证通过,继续处理
             self.websocket = ws
             self.device_id = self.headers.get("device-id", None)
+            self.client_id = self.headers.get("client-id", "")
 
             # 从header中获取客户端想要的音频格式，默认为config.yaml中的配置
             self.audio_format = self.headers.get("audio-format", self.audio_format)
@@ -575,7 +576,7 @@ class ConnectionHandler:
             return
         """初始化记忆模块"""
         self.memory.init_memory(
-            role_id=self.device_id,
+            role_id=self.device_id+"_"+self.client_id,
             llm=self.llm,
             summary_memory=self.config.get("summaryMemory", None),
             save_to_file=not self.read_config_from_api,
