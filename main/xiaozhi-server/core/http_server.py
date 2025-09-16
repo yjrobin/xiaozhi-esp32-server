@@ -30,7 +30,7 @@ class SimpleHttpServer:
         if websocket_config and "你" not in websocket_config:
             return websocket_config
         else:
-            return f"ws://{local_ip}:{port}/api/xiaozhi/"
+            return f"ws://{local_ip}:{port}/preview/api/xiaozhi/"
 
     async def start(self):
         server_config = self.config["server"]
