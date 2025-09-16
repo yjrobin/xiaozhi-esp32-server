@@ -55,10 +55,11 @@ async def sendAudioMessage(conn, sentenceType, audios, text):
         pre_buffer = True
 
     await send_tts_message(conn, "sentence_start", text)
-
+    conn.logger.bind(tag=TAG).info(f"sentence_start sent: {text}")
     await sendAudio(conn, audios, pre_buffer)
-
+    conn.logger.bind(tag=TAG).info(f"audio data sent: {text}")
     await send_tts_message(conn, "sentence_end", text)
+    conn.logger.bind(tag=TAG).info(f"sentence_end sent: {text}")
 
     # 发送结束消息（如果是最后一个文本）
     if conn.llm_finish_task and sentenceType == SentenceType.LAST:
@@ -136,7 +137,7 @@ async def send_stt_message(conn, text):
         return
 
     """发送 STT 状态消息"""
-    
+
     # 解析JSON格式，提取实际的用户说话内容
     display_text = text
     try:
@@ -149,7 +150,7 @@ async def send_stt_message(conn, text):
     except (json.JSONDecodeError, TypeError):
         # 如果不是JSON格式，直接使用原始文本
         display_text = text
-    
+
     stt_text = get_string_no_punctuation_or_emoji(display_text)
     await conn.websocket.send(
         json.dumps({"type": "stt", "text": stt_text, "session_id": conn.session_id})
