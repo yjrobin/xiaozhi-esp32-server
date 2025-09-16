@@ -255,8 +255,8 @@ class TTSProviderBase(ABC):
                                 self.tts_audio_queue.put(
                                     (message.sentence_type, audio_datas, segment_text)
                                 )
-                        if self.is_first_sentence:
-                            self.is_first_sentence = False
+                        # if self.is_first_sentence:
+                        #     self.is_first_sentence = False
                 elif ContentType.FILE == message.content_type:
                     self._process_remaining_text()
                     tts_file = message.content_file
@@ -332,18 +332,19 @@ class TTSProviderBase(ABC):
         )
 
         for punct in punctuations_to_use:
-            if self.is_first_sentence and 'is_first_sentence' in sig.parameters:
-                pos = -1
-                first_pos = current_text.find(punct)
-                # logger.bind(tag=TAG).info(f"first sentence {current_text} find first punct {punct} at {first_pos}")
-                if (first_pos != -1):
-                    for punct_2 in punctuations_to_use:
-                        pos = current_text.find(punct_2, first_pos + 1)
-                        if (pos != -1):
-                            # logger.bind(tag=TAG).info(f"first sentence {current_text} find second punct {punct_2} at {pos}")
-                            break
-            else:
-                pos = current_text.rfind(punct)
+            # if self.is_first_sentence and 'is_first_sentence' in sig.parameters:
+            #     pos = -1
+            #     first_pos = current_text.find(punct)
+            #     # logger.bind(tag=TAG).info(f"first sentence {current_text} find first punct {punct} at {first_pos}")
+            #     if (first_pos != -1):
+            #         for punct_2 in punctuations_to_use:
+            #             pos = current_text.find(punct_2, first_pos + 1)
+            #             if (pos != -1):
+            #                 # logger.bind(tag=TAG).info(f"first sentence {current_text} find second punct {punct_2} at {pos}")
+            #                 break
+            # else:
+            pos = current_text.rfind(punct)
+
             if (pos != -1 and last_punct_pos == -1) or (
                 pos != -1 and pos < last_punct_pos
             ):
@@ -356,9 +357,13 @@ class TTSProviderBase(ABC):
             )
             self.processed_chars += len(segment_text_raw)  # 更新已处理字符位置
 
+            if self.is_first_sentence:
+                self.is_first_sentence = False
+
             return segment_text
         elif self.tts_stop_request and current_text:
             segment_text = current_text
+            self.is_first_sentence = True
             return segment_text
         else:
             return None

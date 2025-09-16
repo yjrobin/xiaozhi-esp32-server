@@ -72,7 +72,8 @@ class TTSProvider(TTSProviderBase):
         voice.text = text
 
         params = {}
-        if is_first_sentence:
+        # if is_first_sentence:
+        if True:
             params['fast_infer'] = 1
             logger.bind(tag=TAG).info("fast_infer = 1")
 
