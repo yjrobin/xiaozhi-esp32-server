@@ -100,6 +100,7 @@ async def sendAudio(conn, audios, pre_buffer=True):
         current_time = time.perf_counter()
         delay = expected_time - current_time
         if delay > 0:
+            conn.logger.bind(tag=TAG).info(f"delay audio data : {delay}")
             await asyncio.sleep(delay)
 
         await conn.websocket.send(opus_packet)
