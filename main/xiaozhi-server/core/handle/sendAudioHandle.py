@@ -77,12 +77,16 @@ async def sendAudio(conn, audios, pre_buffer=True):
     frame_duration = 60  # 帧时长（毫秒），匹配 Opus 编码
     start_time = time.perf_counter()
     play_position = 0
-
+    conn.logger.bind(tag=TAG).info(f"sendAudio begin: len(audios)={len(audios)}")
     # 仅当第一句话时执行预缓冲
     if pre_buffer:
         pre_buffer_frames = min(3, len(audios))
         for i in range(pre_buffer_frames):
+            t1 = time.perf_counter()
+            conn.logger.bind(tag=TAG).info(f"sending pre_buffer_frames[{i}]")
             await conn.websocket.send(audios[i])
+            conn.logger.bind(tag=TAG).info(f"pre_buffer_frames[{i}] sent: took {(time.perf_counter()-t1):.4f}s")
+            conn.logger.bind(tag=TAG).info(f"audio data sent: {text}")
         remaining_audios = audios[pre_buffer_frames:]
     else:
         remaining_audios = audios
@@ -100,10 +104,15 @@ async def sendAudio(conn, audios, pre_buffer=True):
         current_time = time.perf_counter()
         delay = expected_time - current_time
         if delay > 0:
-            conn.logger.bind(tag=TAG).info(f"delay audio data : {delay}")
+            t1 = time.perf_counter()
+            conn.logger.bind(tag=TAG).info(f"sleeping : target {delay}s")
             await asyncio.sleep(delay)
+            conn.logger.bind(tag=TAG).info(f"awake from sleep: took {(time.perf_counter()-t1):.4f}s")
 
+        conn.logger.bind(tag=TAG).info(f"sending opus_packet")
+        t1 = time.perf_counter()
         await conn.websocket.send(opus_packet)
+        conn.logger.bind(tag=TAG).info(f"opus_packet sent: took {(time.perf_counter()-t1):.4f}s")
 
         play_position += frame_duration
 
